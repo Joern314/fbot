@@ -6,7 +6,7 @@ from botpackage.helper.mystrip import norm
 
 _help = 'usage: !nickname <nickname> [[-a|-r] <nickname>]'
 _botname = 'nicknamebot'
-_max_nicks_pp = 25
+_max_nicks_pp = 50
 
 def processMessage(args, rawMessage, db_connection):
 	if len(args) == 0:
