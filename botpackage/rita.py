@@ -58,7 +58,7 @@ def processMessage(args, rawMessage, db_connection):
 					parsedArgs['help']:
 			return helper.botMessage(parser.format_usage().rstrip('\n'), _botname)
 		elif parsedArgs['version']:
-			return helper.botMessage('secret unlocked \o/ the first one calling w/ID gets some chocolate', _botmessage)
+			return helper.botMessage('secret unlocked \o/ the first one calling w/ID gets some chocolate', _botname)
 
 		if parsedArgs['learn']:
 			return learntosing(parsedArgs['song'], db_connection)
