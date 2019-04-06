@@ -1,4 +1,5 @@
 from botpackage.helper import helper
+from botpackage.helper.split import split_with_quotation_marks
 
 from requests import Session
 from bs4 import BeautifulSoup
@@ -48,7 +49,6 @@ _noise = pyparsing.Suppress((~_date + pyparsing.Word(pyparsing.alphas + pyparsin
 _full = _noise + _date
 
 def get_dates(anchor, text):
-    ret = None
     start = 0
     while start != -1:
         start = text.find(anchor, start + 1)
@@ -90,12 +90,13 @@ def format_news(news):
 
         datestring = "vom {vo[day]}{vo[month]}{vo[year]} bis zum {zu[day]}{zu[month]}{zu[year]}".format(**news)
 
-    except Exception as e:
+    except Exception:
         datestring = "Datum unbekannt."
     
     return _format_string.format(**news, datestring = datestring)
 
-def processMessage(args, rawMessage, db_connection):
+def processMessage(message_object, db_connection):
+    args = split_with_quotation_marks(message_object["message"])
     if len(args) == 1 and args[0].lower() == "!" + _bottrigger:
         news = get_all()
         return helper.botMessage("\n".join(map(format_news, news)), _botname)

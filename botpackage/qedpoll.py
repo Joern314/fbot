@@ -1,5 +1,6 @@
 import sqlite3
 from botpackage.helper import helper
+from botpackage.helper.split import split_with_quotation_marks
 
 from requests import Session
 import re
@@ -13,7 +14,8 @@ _regex = re.compile("(\d{1,3})% \((\d+) Stimmen*\)")
 
 fourths = ["", chr(0x258e), chr(0x258c), chr(0x258a), chr(0x2588)]
 
-def processMessage(args, rawMessage, db_connection):
+def processMessage(message_object, db_connection):
+    args = split_with_quotation_marks(message_object["message"])
     parsedArgs = list(filter(lambda x: len(x) > 0, args))
 
     if len(parsedArgs) < 1 or parsedArgs[0].lower() != "!" + _bottrigger:

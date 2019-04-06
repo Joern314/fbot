@@ -2,11 +2,11 @@
 
 import requests # http requests
 import websocket # websocket connections
-import sqlite3
+import sqlite3 # database
 
 # system libraries
-import json # json
-import argparse
+import json # encode and decode websocket-traffic
+import argparse # command line start of fbot
 import threading # lock
 import time # sleep()
 
@@ -16,53 +16,59 @@ import botpackage
 from botpackage.helper.mystrip import _space_chars, stripFromBegin
 from botpackage.helper.split import split_with_quotation_marks
 
-
-def on_close(ws):
-	print('ws closed')
-
-def on_error(ws, error):
-	print('ws error: ' + error)
-
+#global variables
 args = None
 db_connection = sqlite3.connect('varspace/fbotdb.sqlite')
 
-def on_message(ws, message):
-	messageDecoded = json.loads(message)
-	chatPost = messageDecoded['message']
-	print('received', repr(messageDecoded['message']))
-	if int(messageDecoded['bottag']) != 0:
-		return
-	args = split_with_quotation_marks(chatPost)
-	for bot in botpackage.__all__:
-		answer = bot.processMessage(args, messageDecoded, db_connection)
+def on_close(ws): #callback
+	print('ws closed')
+
+def on_error(ws, error): #callback
+	print('ws error: ' + error)
+
+def on_message(ws, message_string): #callback
+	message_object = json.loads(message_string)
+	print('received', repr(message_object['message']))
+	if int(message_object['bottag']) != 0:
+		return #guarantee to ignore posts with bottag
+
+	for bot in botpackage.__all__: #iteriert über alle dateien im subdirectory ./botpackage
+		answer = bot.processMessage(message_object, db_connection)
 		if answer is not None:
-			send(ws, answer['name'], answer['message'], messageDecoded['id']+1)
+			if not is_rate_limited(ws, message_object['id'], bot, answer):
+				send(ws, answer['name'], answer['message'], message_object['id'] + 1)
+			else:
+				continue #todo: add warning
 
+def is_rate_limited(ws, message_id, bot, answer):
+	#todo: implement a good ratelimiter
+	return False
 
-def send(ws, name, chatPost, position=0):
-	message = dict(
+def send(ws, name, message, delay=0):
+	message_object = dict(
 		name = name,
-		message = chatPost,
-		delay = position,
-		publicid = '1',
+		message = message,
+		delay = delay,
+		publicid = '1', #todo: why string?
 		bottag = 1
 	)
-	with sending_lock:
-		ws.send(json.dumps(message))
-		time.sleep(_time_between_botposts)
-
+	message_string = json.dumps(message_object)
+	with sending_lock: #todo: is single-threading really not guaranteed?
+		ws.send(message_string)
 
 def getCookies():
+	#login into chat, retry on error
 	while True:
 		try:
-			req = requests.post('https://chat.qed-verein.de/rubychat/account', data=credentials)
+			req = requests.post('https://chat.qed-verein.de/rubychat/account', 	data=credentials)
 		except ConnectionResetError as e:
 			print('Error while downloading cookies:', e)
 		else:
 			return req.cookies
-		time.sleep(1)
+		time.sleep(1) # todo: why? while True with multi-threading? freezing the system?
 
-def create_ws(cookies, args):
+def create_ws(cookies, channel):
+	#open a new ws for a specific channel
 	try:
 		cookies['userid']
 		cookies['pwhash']
@@ -70,7 +76,7 @@ def create_ws(cookies, args):
 		print('cookies not right')
 		return
 
-	ws = websocket.WebSocketApp('wss://chat.qed-verein.de/websocket?channel=' + args['channel'] + '&position=-0&version=2',
+	ws = websocket.WebSocketApp('wss://chat.qed-verein.de/websocket?channel=' + channel + '&position=-0&version=2',
 			cookie = format_cookies(dict(
 						userid = cookies['userid'],
 						pwhash = cookies['pwhash'],
@@ -83,6 +89,7 @@ def create_ws(cookies, args):
 
 
 def format_cookies(obj):
+	#utility function
 	retval = ''
 	for key in obj:
 		retval += key + '=' + obj[key] + ';'
@@ -114,6 +121,7 @@ def mainloop(args):
 				'message': stripFromBegin(inp, inpSplit[:1]),
 				'id' : eiDii,
 			}
+			#todo: logic not the same, instead create a fake ws-connection. or better: internal server eg with docker from Lukas
 			for bot in botpackage.__all__:
 				x = bot.processMessage(inpSplit[1:], message, db_connection)
 				if x is not None:
@@ -125,10 +133,10 @@ def mainloop(args):
 	cookies = getCookies()
 	while True:
 		print('creating new websocket')
-		ws = create_ws(cookies, parsedArgs)
+		ws = create_ws(cookies, parsedArgs['channel'])
 		if ws:
-			ws.run_forever()
-		time.sleep(1)
+			ws.run_forever() #async? why create new ones all the time? todo: read websocket library api
+		time.sleep(1) # todo: magic number 1, how does reconenct work etc?
 
 if __name__ == '__main__':
 	sending_lock = threading.Lock()

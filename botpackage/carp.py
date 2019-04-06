@@ -2,6 +2,7 @@ import numpy as np
 
 from botpackage.helper import helper
 from botpackage.helper.mystrip import _space_chars
+from botpackage.helper.split import split_with_quotation_marks
 import botpackage.fantasynames.fishNames as fishNames
 import botpackage.fantasynames.lovecraftianNames as lovecraftianNames
 
@@ -45,8 +46,8 @@ def interact(victim):
     dmg = np.random.randint(1,5)
     return helper.botMessage(msg.format(**globals(), **locals()), name)
 
-def processMessage(args, rawMessage, db_connection):
-    user = rawMessage["name"].strip(_space_chars)
+def processMessage(message_object, db_connection):
+    user = message_object["name"].strip(_space_chars)
 
     if np.random.random() <= _interact_chance:
         return interact(user)

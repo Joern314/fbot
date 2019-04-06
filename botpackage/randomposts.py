@@ -13,7 +13,7 @@ _names = [
 ]
 
 
-def processMessage(args, rawMessage, db_connection):
+def processMessage(message_object, db_connection):
 	if random.randrange(_randompost_one_over_probability) == 0:
 		msg_obj = random.choice(_names)
 		return helper.botMessage(msg_obj[0], msg_obj[1])

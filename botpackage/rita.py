@@ -5,6 +5,7 @@ import random
 import botpackage.helper.argparse as argparse # ~ import argparse
 from botpackage.helper import helper, ud
 from botpackage.helper.mystrip import stripFromBegin, _space_chars, truncate
+from botpackage.helper.split import split_with_quotation_marks
 import botpackage.helper.youtube as youtube
 from varspace.settings import botMasters
 
@@ -18,7 +19,8 @@ _slap_trigger = 'slap'
 _featurerequest_trigger = 'featurerequest'
 
 
-def processMessage(args, rawMessage, db_connection):
+def processMessage(message_object, db_connection):
+	args = split_with_quotation_marks(message_object["message"])
 	if len(args) < 2:
 		return None
 
@@ -31,13 +33,13 @@ def processMessage(args, rawMessage, db_connection):
 	elif args[1].lower() == 'ud':
 		if len(args) <= 2:
 			return helper.botMessage(_help_ud, _botname)
-		term = stripFromBegin(rawMessage['message'], args[0:2])
+		term = stripFromBegin(message_object['message'], args[0:2])
 		return helper.botMessage(ud.ud_parser(term), _botname)
 
 	elif args[1].lower() == 'decide':
 		if len(args) < 2:
 			return
-		antwort = '+' if ord(hashlib.sha1((rawMessage['message'].encode()+b'tpraR4gin8XHk_t3bGHZTJ206qc9vyV7LlUMTf655LNJDKGciVXKRLijqGkHgkpW <= Manfreds schlimmstes Geheimnis')).hexdigest()[0]) % 2 == 1 else '-'
+		antwort = '+' if ord(hashlib.sha1((message_object['message'].encode()+b'tpraR4gin8XHk_t3bGHZTJ206qc9vyV7LlUMTf655LNJDKGciVXKRLijqGkHgkpW <= Manfreds schlimmstes Geheimnis')).hexdigest()[0]) % 2 == 1 else '-'
 		return helper.botMessage(antwort, _botname)
 
 	elif args[1].lower().startswith('sing'):
@@ -63,7 +65,7 @@ def processMessage(args, rawMessage, db_connection):
 		if parsedArgs['learn']:
 			return learntosing(parsedArgs['song'], db_connection)
 		elif parsedArgs['remove']:
-			if rawMessage['username'] in botMasters:
+			if message_object['username'] in botMasters:
 				return removeasong(parsedArgs['song'], db_connection)
 			else:
 				return helper.botMessage('DU bist nicht mein botmaster. ich bin gescheitert', _botname)
@@ -76,7 +78,7 @@ def processMessage(args, rawMessage, db_connection):
 		if len(args) == 2:
 			return helper.botMessage('was meinst du?', _botname)
 
-		target = stripFromBegin(rawMessage['message'], args[0:2])
+		target = stripFromBegin(message_object['message'], args[0:2])
 		if args[1] == _slap_trigger:
 			return helper.botMessage('%s schlägt %s'%(_botname.replace('Dr. Ritastein', 'Rita'), target), _botname)
 		elif args[1] == _featurerequest_trigger:

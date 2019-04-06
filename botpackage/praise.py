@@ -1,23 +1,25 @@
 from botpackage.helper import helper
-from botpackage.helper.mystrip import _space_chars, norm
+from botpackage.helper.mystrip import _space_chars, normalize_name
+from botpackage.helper.split import split_with_quotation_marks
 
 _botname = "	 	  	    			  	    	 Jörn"
-_bottrigger = 'praise'
 
 _last = ["fbot",None] # save the two last persons
 
-def processMessage(args, rawMessage, db_connection):
+def processMessage(message_object, db_connection):
     global _last
 
-    if len(args) < 1 or args[0].lower() != "!" + _bottrigger:
+    args = split_with_quotation_marks(message_object["message"])
+
+    if len(args) < 1 or args[0].lower() != "!praise":
         # remember a person
-        now = rawMessage["name"].strip(_space_chars)
+        now = message_object["name"].strip(_space_chars)
         if now != _last[0]:
             _last = [now, _last[0]]
         return
 
     if len(args) < 2:
-        now = rawMessage["name"].strip(_space_chars)
+        now = message_object["name"].strip(_space_chars)
         if now != _last[0]:
             target = _last[0] # prev person
         else:

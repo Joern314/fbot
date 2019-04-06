@@ -8,9 +8,8 @@ def stripFromBegin(s : str, a : list):
 			lstrip(_space_chars)
 
 
-def norm(name):
+def normalize_name(name):
     return name.lower().strip(_space_chars)
-
 
 def truncate(s, length):
 	return (s[:length-1]+'…') if len(s)>50 else s

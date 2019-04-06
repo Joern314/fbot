@@ -2,14 +2,16 @@ import sqlite3
 
 import botpackage.helper.argparse as argparse
 from botpackage.helper import helper
-from botpackage.helper.mystrip import norm
+from botpackage.helper.mystrip import normalize_name
+from botpackage.helper.split import split_with_quotation_marks
 
 _botname = 'Luise'
 _help = '#name nick [-s|-a <int>|-r <int>]'
 _unfreie_punkte_liste = ['fp', 'jp', 'op', 'tp']
 _unfreie_punkte = ['!' + x for x in _unfreie_punkte_liste]
 
-def processMessage(args, rawMessage, db_connection):
+def processMessage(message_object, db_connection):
+	args = split_with_quotation_marks(message_object["message"])
 	if len(args) < 2:
 		return
 
@@ -39,7 +41,7 @@ def processMessage(args, rawMessage, db_connection):
 	cursor = db_connection.cursor()
 
 	if parsedArgs['username'] in ['self', 'selbst']:
-		username = norm(rawMessage['name'])
+		username = normalize_name(message_object['name'])
 	else:
 		username = parsedArgs['username']
 	userid = helper.useridFromUsername(cursor, username)
