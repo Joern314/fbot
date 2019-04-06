@@ -123,7 +123,7 @@ def mainloop(args):
 			}
 			#todo: logic not the same, instead create a fake ws-connection. or better: internal server eg with docker from Lukas
 			for bot in botpackage.__all__:
-				x = bot.processMessage(inpSplit[1:], message, db_connection)
+				x = bot.processMessage(message, db_connection)
 				if x is not None:
 					print(repr(x['name']), ':', repr(x['message']))
 			print()

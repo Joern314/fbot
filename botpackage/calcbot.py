@@ -1,7 +1,7 @@
 import botpackage.helper.calc as calc
 import botpackage.helper.timeout as timeout
 from botpackage.helper import helper
-from botpackage.helper.mystrip import stripFromBegin, _space_chars, is_bot_call
+from botpackage.helper.mystrip import stripFromBegin, _space_chars
 from botpackage.helper.split import split_with_quotation_marks
 
 _botname = '۞'
@@ -14,7 +14,7 @@ def processMessage(message_object, db_connection):
         return
 
     args = split_with_quotation_marks(message_object["message"])
-    if len(args) < 1 or not is_bot_call(args[0], "!" + _bottrigger):
+    if len(args) < 1 or args[0].lower() != "!" + _bottrigger:
         return
 
     expr = stripFromBegin(message_object["message"], [
